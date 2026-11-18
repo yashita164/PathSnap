@@ -1,0 +1,8 @@
+# Extra dependencies for the API (on top of requirements.txt: numpy, pandas, pyproj, scikit-learn)
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+joblib>=1.3
+# tests
+httpx>=0.27
+pytest>=8.0

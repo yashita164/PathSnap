@@ -23,7 +23,9 @@ from api.model_loader import (
     clear_model_cache,
     get_classifier_loader,
 )
+from api.schemas import PredictResponse
 from src.features import FEATURE_COLUMNS
+from src.hmm import calculate_route_continuity, decode_route
 
 # --- synthetic road network (same geometry style as tests/test_phase3.py) ---
 NODES = [(-0.001, 0.0), (0.0, 0.0), (0.001, 0.0), (0.001, 0.001), (0.002, 0.001)]
@@ -470,6 +472,45 @@ def test_custom_decoder_can_be_plugged_in(settings, stub, monkeypatch):
         "probabilities_aligned": True,
         "has_network": True,
     }
+
+
+def test_hmm_decoder_integrates_with_api_and_response_schema(settings, stub, monkeypatch):
+    class HMMDecoder:
+        name = "hmm_test"
+
+        def decode(self, data: DecodeInput) -> DecodeResult:
+            result = decode_route(
+                data.track,
+                data.nodes,
+                data.arcs,
+                data.candidates,
+                data.probabilities,
+            )
+            return DecodeResult(
+                arc_ids=result.predictions["hmm_arc_id"].to_numpy(dtype=np.int64),
+                scores=result.predictions["hmm_candidate_probability"].to_numpy(
+                    dtype=np.float64
+                ),
+            )
+
+    monkeypatch.setitem(decoding._DECODERS, "hmm_test", HMMDecoder)
+    response = make_client(settings, stub).post(
+        "/predict/trip_a", json={"decoder": "hmm_test"}
+    )
+
+    assert response.status_code == 200
+    result = PredictResponse.model_validate(response.json())
+    assert result.decoder == "hmm_test"
+    assert len(result.matches) == len(TRACK)
+    assert result.metrics.n_matched_observations == len(TRACK)
+    assert calculate_route_continuity(
+        result.predicted_arc_ids,
+        pd.DataFrame(ARCS, columns=["from_node", "to_node"]),
+    ) == 1.0
+    assert all(
+        match.probability is not None and 0.0 <= match.probability <= 1.0
+        for match in result.matches
+    )
 
 
 def test_default_decoder_is_configurable(settings, stub, monkeypatch):

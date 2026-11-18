@@ -3,16 +3,46 @@ data/
 
 # Python
 __pycache__/
+*.py[codz]
 *.pyc
+*$py.class
+*.so
 venv/
 .venv/
+env/
+ENV/
 
 # Jupyter
 .ipynb_checkpoints/
+.pytest_cache/
+.ipython/
 
 # Environment variables
 .env
 .env.*
+.envrc
 
 # IDE
 .vscode/
+.idea/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+
+# Testing and coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Type checking and linting
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Temporary files
+tempCodeRunnerFile.py

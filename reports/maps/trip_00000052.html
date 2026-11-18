@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_2a85561f8b8cb6026fb38576329c09d1 {
+                    position: relative;
+                    width: 100.0vw;
+                    height: 100.0vh;
+
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>/*
+ * Glyphicons Halflings -- the icon font used by folium's default Awesome Markers
+ * (Icon(prefix="glyphicon")). Extracted from Bootstrap 3's glyphicon rules only.
+ *
+ * folium previously loaded netdna's bootstrap-glyphicons.css, which despite its
+ * name ships a full Bootstrap-3 base stylesheet (normalize reset + global `body`
+ * rules) that leaked onto the host page (GH-1820). This file provides just the
+ * @font-face and .glyphicon/.glyphicon-* rules needed for the markers, with no
+ * page-wide side effects. Font files are served from jsDelivr.
+ */
+@font-face{font-family:'Glyphicons Halflings';src:url('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/fonts/glyphicons-halflings-regular.eot');src:url('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'),url('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/fonts/glyphicons-halflings-regular.woff') format('woff'),url('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/fonts/glyphicons-halflings-regular.ttf') format('truetype'),url('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');}.glyphicon{position:relative;top:1px;display:inline-block;font-family:'Glyphicons Halflings';font-style:normal;font-weight:normal;line-height:1;-webkit-font-smoothing:antialiased;}
+.glyphicon-asterisk:before{content:"\2a";}
+.glyphicon-plus:before{content:"\2b";}
+.glyphicon-euro:before{content:"\20ac";}
+.glyphicon-minus:before{content:"\2212";}
+.glyphicon-cloud:before{content:"\2601";}
+.glyphicon-envelope:before{content:"\2709";}
+.glyphicon-pencil:before{content:"\270f";}
+.glyphicon-glass:before{content:"\e001";}
+.glyphicon-music:before{content:"\e002";}
+.glyphicon-search:before{content:"\e003";}
+.glyphicon-heart:before{content:"\e005";}
+.glyphicon-star:before{content:"\e006";}
+.glyphicon-star-empty:before{content:"\e007";}
+.glyphicon-user:before{content:"\e008";}
+.glyphicon-film:before{content:"\e009";}
+.glyphicon-th-large:before{content:"\e010";}
+.glyphicon-th:before{content:"\e011";}
+.glyphicon-th-list:before{content:"\e012";}
+.glyphicon-ok:before{content:"\e013";}
+.glyphicon-remove:before{content:"\e014";}
+.glyphicon-zoom-in:before{content:"\e015";}
+.glyphicon-zoom-out:before{content:"\e016";}
+.glyphicon-off:before{content:"\e017";}
+.glyphicon-signal:before{content:"\e018";}
+.glyphicon-cog:before{content:"\e019";}
+.glyphicon-trash:before{content:"\e020";}
+.glyphicon-home:before{content:"\e021";}
+.glyphicon-file:before{content:"\e022";}
+.glyphicon-time:before{content:"\e023";}
+.glyphicon-road:before{content:"\e024";}
+.glyphicon-download-alt:before{content:"\e025";}
+.glyphicon-download:before{content:"\e026";}
+.glyphicon-upload:before{content:"\e027";}
+.glyphicon-inbox:before{content:"\e028";}
+.glyphicon-play-circle:before{content:"\e029";}
+.glyphicon-repeat:before{content:"\e030";}
+.glyphicon-refresh:before{content:"\e031";}
+.glyphicon-list-alt:before{content:"\e032";}
+.glyphicon-flag:before{content:"\e034";}
+.glyphicon-headphones:before{content:"\e035";}
+.glyphicon-volume-off:before{content:"\e036";}
+.glyphicon-volume-down:before{content:"\e037";}
+.glyphicon-volume-up:before{content:"\e038";}
+.glyphicon-qrcode:before{content:"\e039";}
+.glyphicon-barcode:before{content:"\e040";}
+.glyphicon-tag:before{content:"\e041";}
+.glyphicon-tags:before{content:"\e042";}
+.glyphicon-book:before{content:"\e043";}
+.glyphicon-print:before{content:"\e045";}
+.glyphicon-font:before{content:"\e047";}
+.glyphicon-bold:before{content:"\e048";}
+.glyphicon-italic:before{content:"\e049";}
+.glyphicon-text-height:before{content:"\e050";}
+.glyphicon-text-width:before{content:"\e051";}
+.glyphicon-align-left:before{content:"\e052";}
+.glyphicon-align-center:before{content:"\e053";}
+.glyphicon-align-right:before{content:"\e054";}
+.glyphicon-align-justify:before{content:"\e055";}
+.glyphicon-list:before{content:"\e056";}
+.glyphicon-indent-left:before{content:"\e057";}
+.glyphicon-indent-right:before{content:"\e058";}
+.glyphicon-facetime-video:before{content:"\e059";}
+.glyphicon-picture:before{content:"\e060";}
+.glyphicon-map-marker:before{content:"\e062";}
+.glyphicon-adjust:before{content:"\e063";}
+.glyphicon-tint:before{content:"\e064";}
+.glyphicon-edit:before{content:"\e065";}
+.glyphicon-share:before{content:"\e066";}
+.glyphicon-check:before{content:"\e067";}
+.glyphicon-move:before{content:"\e068";}
+.glyphicon-step-backward:before{content:"\e069";}
+.glyphicon-fast-backward:before{content:"\e070";}
+.glyphicon-backward:before{content:"\e071";}
+.glyphicon-play:before{content:"\e072";}
+.glyphicon-pause:before{content:"\e073";}
+.glyphicon-stop:before{content:"\e074";}
+.glyphicon-forward:before{content:"\e075";}
+.glyphicon-fast-forward:before{content:"\e076";}
+.glyphicon-step-forward:before{content:"\e077";}
+.glyphicon-eject:before{content:"\e078";}
+.glyphicon-chevron-left:before{content:"\e079";}
+.glyphicon-chevron-right:before{content:"\e080";}
+.glyphicon-plus-sign:before{content:"\e081";}
+.glyphicon-minus-sign:before{content:"\e082";}
+.glyphicon-remove-sign:before{content:"\e083";}
+.glyphicon-ok-sign:before{content:"\e084";}
+.glyphicon-question-sign:before{content:"\e085";}
+.glyphicon-info-sign:before{content:"\e086";}
+.glyphicon-screenshot:before{content:"\e087";}
+.glyphicon-remove-circle:before{content:"\e088";}
+.glyphicon-ok-circle:before{content:"\e089";}
+.glyphicon-ban-circle:before{content:"\e090";}
+.glyphicon-arrow-left:before{content:"\e091";}
+.glyphicon-arrow-right:before{content:"\e092";}
+.glyphicon-arrow-up:before{content:"\e093";}
+.glyphicon-arrow-down:before{content:"\e094";}
+.glyphicon-share-alt:before{content:"\e095";}
+.glyphicon-resize-full:before{content:"\e096";}
+.glyphicon-resize-small:before{content:"\e097";}
+.glyphicon-exclamation-sign:before{content:"\e101";}
+.glyphicon-gift:before{content:"\e102";}
+.glyphicon-leaf:before{content:"\e103";}
+.glyphicon-eye-open:before{content:"\e105";}
+.glyphicon-eye-close:before{content:"\e106";}
+.glyphicon-warning-sign:before{content:"\e107";}
+.glyphicon-plane:before{content:"\e108";}
+.glyphicon-random:before{content:"\e110";}
+.glyphicon-comment:before{content:"\e111";}
+.glyphicon-magnet:before{content:"\e112";}
+.glyphicon-chevron-up:before{content:"\e113";}
+.glyphicon-chevron-down:before{content:"\e114";}
+.glyphicon-retweet:before{content:"\e115";}
+.glyphicon-shopping-cart:before{content:"\e116";}
+.glyphicon-folder-close:before{content:"\e117";}
+.glyphicon-folder-open:before{content:"\e118";}
+.glyphicon-resize-vertical:before{content:"\e119";}
+.glyphicon-resize-horizontal:before{content:"\e120";}
+.glyphicon-hdd:before{content:"\e121";}
+.glyphicon-bullhorn:before{content:"\e122";}
+.glyphicon-certificate:before{content:"\e124";}
+.glyphicon-thumbs-up:before{content:"\e125";}
+.glyphicon-thumbs-down:before{content:"\e126";}
+.glyphicon-hand-right:before{content:"\e127";}
+.glyphicon-hand-left:before{content:"\e128";}
+.glyphicon-hand-up:before{content:"\e129";}
+.glyphicon-hand-down:before{content:"\e130";}
+.glyphicon-circle-arrow-right:before{content:"\e131";}
+.glyphicon-circle-arrow-left:before{content:"\e132";}
+.glyphicon-circle-arrow-up:before{content:"\e133";}
+.glyphicon-circle-arrow-down:before{content:"\e134";}
+.glyphicon-globe:before{content:"\e135";}
+.glyphicon-tasks:before{content:"\e137";}
+.glyphicon-filter:before{content:"\e138";}
+.glyphicon-fullscreen:before{content:"\e140";}
+.glyphicon-dashboard:before{content:"\e141";}
+.glyphicon-heart-empty:before{content:"\e143";}
+.glyphicon-link:before{content:"\e144";}
+.glyphicon-phone:before{content:"\e145";}
+.glyphicon-usd:before{content:"\e148";}
+.glyphicon-gbp:before{content:"\e149";}
+.glyphicon-sort:before{content:"\e150";}
+.glyphicon-sort-by-alphabet:before{content:"\e151";}
+.glyphicon-sort-by-alphabet-alt:before{content:"\e152";}
+.glyphicon-sort-by-order:before{content:"\e153";}
+.glyphicon-sort-by-order-alt:before{content:"\e154";}
+.glyphicon-sort-by-attributes:before{content:"\e155";}
+.glyphicon-sort-by-attributes-alt:before{content:"\e156";}
+.glyphicon-unchecked:before{content:"\e157";}
+.glyphicon-expand:before{content:"\e158";}
+.glyphicon-collapse-down:before{content:"\e159";}
+.glyphicon-collapse-up:before{content:"\e160";}
+.glyphicon-log-in:before{content:"\e161";}
+.glyphicon-flash:before{content:"\e162";}
+.glyphicon-log-out:before{content:"\e163";}
+.glyphicon-new-window:before{content:"\e164";}
+.glyphicon-record:before{content:"\e165";}
+.glyphicon-save:before{content:"\e166";}
+.glyphicon-open:before{content:"\e167";}
+.glyphicon-saved:before{content:"\e168";}
+.glyphicon-import:before{content:"\e169";}
+.glyphicon-export:before{content:"\e170";}
+.glyphicon-send:before{content:"\e171";}
+.glyphicon-floppy-disk:before{content:"\e172";}
+.glyphicon-floppy-saved:before{content:"\e173";}
+.glyphicon-floppy-remove:before{content:"\e174";}
+.glyphicon-floppy-save:before{content:"\e175";}
+.glyphicon-floppy-open:before{content:"\e176";}
+.glyphicon-credit-card:before{content:"\e177";}
+.glyphicon-transfer:before{content:"\e178";}
+.glyphicon-cutlery:before{content:"\e179";}
+.glyphicon-header:before{content:"\e180";}
+.glyphicon-compressed:before{content:"\e181";}
+.glyphicon-earphone:before{content:"\e182";}
+.glyphicon-phone-alt:before{content:"\e183";}
+.glyphicon-tower:before{content:"\e184";}
+.glyphicon-stats:before{content:"\e185";}
+.glyphicon-sd-video:before{content:"\e186";}
+.glyphicon-hd-video:before{content:"\e187";}
+.glyphicon-subtitles:before{content:"\e188";}
+.glyphicon-sound-stereo:before{content:"\e189";}
+.glyphicon-sound-dolby:before{content:"\e190";}
+.glyphicon-sound-5-1:before{content:"\e191";}
+.glyphicon-sound-6-1:before{content:"\e192";}
+.glyphicon-sound-7-1:before{content:"\e193";}
+.glyphicon-copyright-mark:before{content:"\e194";}
+.glyphicon-registration-mark:before{content:"\e195";}
+.glyphicon-cloud-download:before{content:"\e197";}
+.glyphicon-cloud-upload:before{content:"\e198";}
+.glyphicon-tree-conifer:before{content:"\e199";}
+.glyphicon-tree-deciduous:before{content:"\e200";}
+.glyphicon-briefcase:before{content:"\1f4bc";}
+.glyphicon-calendar:before{content:"\1f4c5";}
+.glyphicon-pushpin:before{content:"\1f4cc";}
+.glyphicon-paperclip:before{content:"\1f4ce";}
+.glyphicon-camera:before{content:"\1f4f7";}
+.glyphicon-lock:before{content:"\1f512";}
+.glyphicon-bell:before{content:"\1f514";}
+.glyphicon-bookmark:before{content:"\1f516";}
+.glyphicon-fire:before{content:"\1f525";}
+.glyphicon-wrench:before{content:"\1f527";}
+</style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    
+            
+        
+    
+            
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_2a85561f8b8cb6026fb38576329c09d1" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_2a85561f8b8cb6026fb38576329c09d1 = L.map(
+                "map_2a85561f8b8cb6026fb38576329c09d1",
+                {
+                    center: [56.81009788167938, 35.87581584732825],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 5,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_2a85561f8b8cb6026fb38576329c09d1);
+
+            
+
+        
+    
+            var tile_layer_55effc05bd2d173f5bdf2c60882067c6 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_55effc05bd2d173f5bdf2c60882067c6.addTo(map_2a85561f8b8cb6026fb38576329c09d1);
+        
+    
+            var poly_line_08104cb23febc1605717483d7f372a0e = L.polyline(
+                [[56.79915, 35.858383], [56.799107, 35.858632], [56.798914, 35.859006], [56.798807, 35.859313], [56.798706, 35.85964], [56.798646, 35.859984], [56.798586, 35.86022], [56.79848, 35.860694], [56.798312, 35.861104], [56.798257, 35.861534], [56.79811, 35.861765], [56.798126, 35.86199], [56.797983, 35.862316], [56.797969, 35.862609], [56.797985, 35.862929], [56.79789, 35.86311], [56.79777, 35.863503], [56.797689, 35.863707], [56.79766, 35.864183], [56.797555, 35.864205], [56.797573, 35.864563], [56.797464, 35.864663], [56.797392, 35.865065], [56.797413, 35.865287], [56.797285, 35.865373], [56.797207, 35.865658], [56.797039, 35.865542], [56.796864, 35.865556], [56.79678, 35.865467], [56.796705, 35.865564], [56.79657, 35.865203], [56.796373, 35.865106], [56.796374, 35.864686], [56.796306, 35.864568], [56.796255, 35.864386], [56.796178, 35.86412], [56.796, 35.863853], [56.79604, 35.863686], [56.795914, 35.863308], [56.795891, 35.863149], [56.795752, 35.862861], [56.795579, 35.862709], [56.795494, 35.862318], [56.795518, 35.862045], [56.795324, 35.861666], [56.795252, 35.861407], [56.795126, 35.86117], [56.795125, 35.860865], [56.795235, 35.860557], [56.795167, 35.860288], [56.795249, 35.860173], [56.795357, 35.859943], [56.795461, 35.859942], [56.795618, 35.859896], [56.795763, 35.859843], [56.795835, 35.859931], [56.796027, 35.859883], [56.79621, 35.859957], [56.796324, 35.860229], [56.796505, 35.860407], [56.796674, 35.860325], [56.796751, 35.860344], [56.797005, 35.860433], [56.797092, 35.860641], [56.797321, 35.860711], [56.797463, 35.860713], [56.797625, 35.860906], [56.797784, 35.860881], [56.798061, 35.861086], [56.798096, 35.861214], [56.798305, 35.861294], [56.798573, 35.861398], [56.798755, 35.861603], [56.798917, 35.8618], [56.799067, 35.862022], [56.799199, 35.862217], [56.799329, 35.86258], [56.799582, 35.86282], [56.799723, 35.862921], [56.799935, 35.86317], [56.800195, 35.863273], [56.800275, 35.863376], [56.800665, 35.86396], [56.800824, 35.864282], [56.801111, 35.864588], [56.801334, 35.86482], [56.80152, 35.865003], [56.801613, 35.865199], [56.801815, 35.865509], [56.801975, 35.865835], [56.802258, 35.865949], [56.802343, 35.866343], [56.802581, 35.866479], [56.802738, 35.866838], [56.802862, 35.867031], [56.803157, 35.867239], [56.803318, 35.867458], [56.803512, 35.86762], [56.803743, 35.867785], [56.803921, 35.868073], [56.804225, 35.868228], [56.804392, 35.868311], [56.804537, 35.86874], [56.804824, 35.868843], [56.804952, 35.868971], [56.805229, 35.869189], [56.805339, 35.869516], [56.805547, 35.869671], [56.805792, 35.869792], [56.805955, 35.870041], [56.80618, 35.870106], [56.806349, 35.870429], [56.806531, 35.870581], [56.80668, 35.87066], [56.80691, 35.871016], [56.807005, 35.871148], [56.807187, 35.871195], [56.807355, 35.87138], [56.807568, 35.871472], [56.807717, 35.871802], [56.807867, 35.872171], [56.808103, 35.872206], [56.808244, 35.872489], [56.808416, 35.87264], [56.808575, 35.872695], [56.808643, 35.872982], [56.808901, 35.873261], [56.809013, 35.873346], [56.809247, 35.873444], [56.80939, 35.873839], [56.809639, 35.873861], [56.809792, 35.874096], [56.810035, 35.874186], [56.810235, 35.874389], [56.810456, 35.874514], [56.810661, 35.874764], [56.810753, 35.87502], [56.811077, 35.875266], [56.811248, 35.875457], [56.811454, 35.875792], [56.811692, 35.875955], [56.811867, 35.876225], [56.812034, 35.876601], [56.812267, 35.876832], [56.81241, 35.877078], [56.812649, 35.877248], [56.812877, 35.877718], [56.813046, 35.877925], [56.813202, 35.878102], [56.813405, 35.878377], [56.813569, 35.878688], [56.813764, 35.878717], [56.813922, 35.87919], [56.814098, 35.879324], [56.814163, 35.879596], [56.81429, 35.879774], [56.814474, 35.879973], [56.81457, 35.880247], [56.814767, 35.880526], [56.814903, 35.880512], [56.815104, 35.880861], [56.815223, 35.880921], [56.815561, 35.881327], [56.815741, 35.881583], [56.815973, 35.881746], [56.816163, 35.881981], [56.816295, 35.882212], [56.816432, 35.882451], [56.816714, 35.882649], [56.816716, 35.882831], [56.817021, 35.883121], [56.81721, 35.883402], [56.817368, 35.883343], [56.817611, 35.883798], [56.81777, 35.883932], [56.817945, 35.884155], [56.818203, 35.884292], [56.818346, 35.88467], [56.818503, 35.884894], [56.818623, 35.885169], [56.818745, 35.88527], [56.818926, 35.885587], [56.819119, 35.885738], [56.819257, 35.885876], [56.819452, 35.886159], [56.819614, 35.886197], [56.819708, 35.886453], [56.819835, 35.886717], [56.820069, 35.886749], [56.820161, 35.887022], [56.820277, 35.887263], [56.820418, 35.887467], [56.820551, 35.887546], [56.820678, 35.887832], [56.820806, 35.887981], [56.8209, 35.888142], [56.821073, 35.888226], [56.821194, 35.888516], [56.821353, 35.888676], [56.821452, 35.888862], [56.821635, 35.888986], [56.821674, 35.888971], [56.82181, 35.88934], [56.821914, 35.889359], [56.821965, 35.889479], [56.822125, 35.889605], [56.822233, 35.889825], [56.822393, 35.889742], [56.822429, 35.890056], [56.822555, 35.890096], [56.822622, 35.890239], [56.822672, 35.890247], [56.822929, 35.890314], [56.822969, 35.890581], [56.823083, 35.890729], [56.823201, 35.890793], [56.823213, 35.890929], [56.823303, 35.890947], [56.823364, 35.891168], [56.823281, 35.891439], [56.823364, 35.891379], [56.823234, 35.891488], [56.82332, 35.891547], [56.823361, 35.891701], [56.823369, 35.891868], [56.823397, 35.89203], [56.823442, 35.892091], [56.823545, 35.892248], [56.823595, 35.892298], [56.823753, 35.892224], [56.823877, 35.892221], [56.824038, 35.892283], [56.824139, 35.892063], [56.824226, 35.892125], [56.824298, 35.892155], [56.824448, 35.892317], [56.824581, 35.8923], [56.824632, 35.892537], [56.824638, 35.892693], [56.824869, 35.893053], [56.824905, 35.89303], [56.825079, 35.893191], [56.825123, 35.893319], [56.825282, 35.893438], [56.825296, 35.89379], [56.82548, 35.893972], [56.825591, 35.894088], [56.825693, 35.8943], [56.82584, 35.894365], [56.825996, 35.894572], [56.826108, 35.894765], [56.826284, 35.894829], [56.826375, 35.895093], [56.826516, 35.895168], [56.82655, 35.895313], [56.826755, 35.895641], [56.826859, 35.895594], [56.826904, 35.895901], [56.827066, 35.896], [56.82724, 35.896156], [56.82737, 35.896137], [56.827472, 35.896431]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 4}
+            ).addTo(map_2a85561f8b8cb6026fb38576329c09d1);
+        
+    
+            poly_line_08104cb23febc1605717483d7f372a0e.bindTooltip(
+                `<div>
+                     Trip 00000052 (student_test)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_0514255c0138a36f3ff5963b0ac0d239 = L.marker(
+                [56.79915, 35.858383],
+                {
+}
+            ).addTo(map_2a85561f8b8cb6026fb38576329c09d1);
+        
+    
+            var icon_53ea22864cb2577659c9911ce3314c51 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d75f9e60e057d1f6f22692ae29c1b628 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2daa00ff6a30b1a218dc56065a986e5a = $(`<div id="html_2daa00ff6a30b1a218dc56065a986e5a" style="width: 100.0%; height: 100.0%;">Start: 00000052</div>`)[0];
+                popup_d75f9e60e057d1f6f22692ae29c1b628.setContent(html_2daa00ff6a30b1a218dc56065a986e5a);
+            
+        
+
+        marker_0514255c0138a36f3ff5963b0ac0d239.bindPopup(popup_d75f9e60e057d1f6f22692ae29c1b628)
+        ;
+
+        
+    
+    
+            marker_0514255c0138a36f3ff5963b0ac0d239.bindTooltip(
+                `<div>
+                     Trip 00000052 start
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                {
+                    const element = marker_0514255c0138a36f3ff5963b0ac0d239.getElement();
+                    if (element) {
+                        element.style.width = "";
+                        element.style.height = "";
+                        element.style.marginLeft = "";
+                        element.style.marginTop = "";
+                    }
+                }
+                marker_0514255c0138a36f3ff5963b0ac0d239.setIcon(icon_53ea22864cb2577659c9911ce3314c51);
+            
+    
+            var marker_fdd1a3257f9514f49f444635cda45cbd = L.marker(
+                [56.827472, 35.896431],
+                {
+}
+            ).addTo(map_2a85561f8b8cb6026fb38576329c09d1);
+        
+    
+            var icon_3b27580da1e7583834bd1c8498345196 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "stop",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_0de763f48e157ffd3388aa72f16960db = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a4abb474953ef074005f7c3bde63d917 = $(`<div id="html_a4abb474953ef074005f7c3bde63d917" style="width: 100.0%; height: 100.0%;">End: 00000052</div>`)[0];
+                popup_0de763f48e157ffd3388aa72f16960db.setContent(html_a4abb474953ef074005f7c3bde63d917);
+            
+        
+
+        marker_fdd1a3257f9514f49f444635cda45cbd.bindPopup(popup_0de763f48e157ffd3388aa72f16960db)
+        ;
+
+        
+    
+    
+            marker_fdd1a3257f9514f49f444635cda45cbd.bindTooltip(
+                `<div>
+                     Trip 00000052 end
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                {
+                    const element = marker_fdd1a3257f9514f49f444635cda45cbd.getElement();
+                    if (element) {
+                        element.style.width = "";
+                        element.style.height = "";
+                        element.style.marginLeft = "";
+                        element.style.marginTop = "";
+                    }
+                }
+                marker_fdd1a3257f9514f49f444635cda45cbd.setIcon(icon_3b27580da1e7583834bd1c8498345196);
+            
+    
+            map_2a85561f8b8cb6026fb38576329c09d1.fitBounds(
+                [[56.795125, 35.858383], [56.827472, 35.896431]],
+                {}
+            );
+        
+</script>
+</html>

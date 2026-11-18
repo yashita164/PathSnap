@@ -1,0 +1,2 @@
+accuracy,precision,recall,f1,roc_auc,log_loss,top1_accuracy,top1_observations_evaluated,labelled_observations,candidate_miss_count,candidate_miss_rate,candidate_rows_evaluated,inference_seconds,trips_found,trips_evaluated,trips_failed,candidate_rows_generated,training_seconds,model_configuration
+0.9403100347547857,0.8250384319754035,0.8576707950459449,0.8410381978452498,0.9732346697272115,0.1603700277903559,0.873152217339193,10012,10017,5,0.000499151442547669,54381,0.13041320000775158,10,9,1,103737,10.324072999996133,"Tuned final refit, C=2.77866341088"

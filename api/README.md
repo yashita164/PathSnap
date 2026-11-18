@@ -1,12 +1,26 @@
 # PathSnap API
 
-Run from the repository root:
+Run from the repository root in PowerShell:
 
-    pip install -r requirements.txt -r requirements-api.txt
-    set PATHSNAP_MODEL_PATH=path\to\final_model.joblib      (PowerShell: $env:PATHSNAP_MODEL_PATH="...")
-    uvicorn api.main:app --reload
+    .\venv\Scripts\python.exe -m uvicorn api.main:app --host 127.0.0.1 --port 8000
 
-Interactive docs: http://127.0.0.1:8000/docs
+The app serves the frontend at http://127.0.0.1:8000/ and interactive API docs at
+http://127.0.0.1:8000/docs. The model path defaults to the project-relative
+`artifacts\model.joblib`; no absolute machine path is required.
+
+To supply an external permitted trip dataset, set `PATHSNAP_DATA_ROOT` to a data
+root that contains `student_test\<trip_id>\<trip_id>.track`, `.nodes`, and `.arcs`:
+
+    $env:PATHSNAP_DATA_ROOT = "D:\pathsnap-data"
+
+The current process only serves the `student_test` split. It never opens `.route`
+files. `PATHSNAP_MODEL_PATH` can override the default model path, and a relative
+override is resolved from the repository root:
+
+    $env:PATHSNAP_MODEL_PATH = "artifacts\model.joblib"
+
+The UI selects HMM/Viterbi by default. To make HMM the default for other clients,
+set `$env:PATHSNAP_DECODER = "hmm"`; `argmax` remains available.
 
 | Endpoint | Purpose |
 |---|---|
@@ -20,22 +34,10 @@ Configuration is by environment variables (see `api/config.py`). The classifier 
 fitted estimator/Pipeline saved with `joblib.dump` that has `predict_proba`; the file name is
 not assumed. Without a model file, `/predict` returns 503 `model_unavailable`.
 
-## Plugging in the HMM/Viterbi decoder
-
-    from api.decoding import register_decoder, DecodeInput, DecodeResult
-
-    class HmmViterbiDecoder:
-        name = "hmm"
-        def decode(self, data: DecodeInput) -> DecodeResult:
-            # data.candidates: one row per (observation, arc) incl. features/rank/distance
-            # data.probabilities: classifier P(match), aligned with data.candidates rows
-            # data.track / data.nodes / data.arcs: for building transition costs
-            # return arc id per GPS observation (-1 = unmatched) and a score
-            ...
-
-    register_decoder("hmm", HmmViterbiDecoder)
-
-Then call with `{"decoder": "hmm"}` or set `PATHSNAP_DECODER=hmm`.
+The HMM adapter is registered by the application and calls `src.hmm.decode_route`
+with candidate probabilities aligned to candidate rows. Each API response
+includes GPS observations and the predicted arc geometry; it does not include
+reference routes or labels.
 
 ## Data policy built in
 

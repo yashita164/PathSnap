@@ -4,10 +4,12 @@ Run from the repository root:
     uvicorn api.main:app --reload
 """
 
+from pathlib import Path
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from api import __version__
 from api.config import Settings, get_settings
@@ -18,6 +20,7 @@ from api.model_loader import (
     get_classifier_loader,
     model_is_available,
 )
+from api.hmm_decoder import register_hmm_decoder
 from api.schemas import (
     ErrorResponse,
     HealthResponse,
@@ -32,9 +35,11 @@ _ERROR_RESPONSES = {
     422: {"model": ErrorResponse, "description": "Invalid trip ID, trip data or decoder"},
     503: {"model": ErrorResponse, "description": "Classifier unavailable"},
 }
+_FRONTEND_FILE = Path(__file__).resolve().parents[1] / "frontend" / "index.html"
 
 
 def create_app() -> FastAPI:
+    register_hmm_decoder()
     app = FastAPI(
         title="PathSnap API",
         version=__version__,
@@ -52,6 +57,10 @@ def create_app() -> FastAPI:
             allow_methods=["GET", "POST"],
             allow_headers=["*"],
         )
+
+    @app.get("/", include_in_schema=False)
+    def frontend() -> FileResponse:
+        return FileResponse(_FRONTEND_FILE, media_type="text/html")
 
     @app.exception_handler(ApiError)
     async def handle_api_error(_: Request, error: ApiError) -> JSONResponse:

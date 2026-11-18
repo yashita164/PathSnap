@@ -25,6 +25,16 @@ from api.errors import ConfigurationError
 # Data policy: only the student development split may be served. Evaluator /
 # held-out data must never be reachable through the API, whatever the config says.
 ALLOWED_DEV_SPLITS = ("student_test",)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DATA_ROOT = PROJECT_ROOT / "data"
+DEFAULT_MODEL_PATH = PROJECT_ROOT / "artifacts" / "model.joblib"
+
+
+def _resolve_project_path(value: str | Path) -> Path:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path.resolve()
 
 
 @dataclass(frozen=True)
@@ -65,15 +75,24 @@ def get_settings() -> Settings:
             "PATHSNAP_SEARCH_RADIUS_M / PATHSNAP_MAX_CANDIDATES must be numeric."
         ) from error
     model_path = env.get("PATHSNAP_MODEL_PATH")
+    data_root = env.get("PATHSNAP_DATA_ROOT")
     origins = tuple(
         origin.strip()
         for origin in env.get("PATHSNAP_CORS_ORIGINS", "").split(",")
         if origin.strip()
     )
     return Settings(
-        data_root=Path(env.get("PATHSNAP_DATA_ROOT", "data")),
+        data_root=(
+            _resolve_project_path(data_root)
+            if data_root
+            else DEFAULT_DATA_ROOT
+        ),
         dev_split=env.get("PATHSNAP_DEV_SPLIT", "student_test"),
-        model_path=Path(model_path) if model_path else None,
+        model_path=(
+            _resolve_project_path(model_path)
+            if model_path
+            else DEFAULT_MODEL_PATH
+        ),
         model_name=env.get("PATHSNAP_MODEL_NAME") or None,
         decoder=env.get("PATHSNAP_DECODER", "argmax"),
         search_radius_m=search_radius,

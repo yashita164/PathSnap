@@ -40,6 +40,12 @@ class ObservationMatch(BaseModel):
     probability: float | None
 
 
+class GpsPoint(BaseModel):
+    gps_observation_index: int
+    longitude: float
+    latitude: float
+
+
 class LineStringGeometry(BaseModel):
     type: Literal["LineString"] = "LineString"
     coordinates: list[list[float]]  # [[lon, lat], [lon, lat]]
@@ -89,6 +95,7 @@ class PredictResponse(BaseModel):
     status: Literal["ok", "partial", "no_match", "no_candidates"]
     model: str | None
     decoder: str
+    gps_points: list[GpsPoint]
     predicted_arc_ids: list[int]
     geometry: GeometryCollection
     matches: list[ObservationMatch]

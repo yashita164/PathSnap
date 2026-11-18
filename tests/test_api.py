@@ -138,6 +138,7 @@ def test_health_without_model(settings):
     assert body["model_available"] is False
     assert body["default_decoder"] == "argmax"
     assert "argmax" in body["available_decoders"]
+    assert "hmm" in body["available_decoders"]
     assert body["dev_split"] == "student_test"
 
 
@@ -171,12 +172,18 @@ def test_predict_success_structure_and_values(client, stub):
 
     assert set(body) == {
         "trip_id", "status", "model", "decoder", "predicted_arc_ids",
-        "geometry", "matches", "metrics",
+        "gps_points", "geometry", "matches", "metrics",
     }
     assert body["trip_id"] == "trip_a"
     assert body["status"] == "ok"
     assert body["model"] == "stub-model"
     assert body["decoder"] == "argmax"
+    assert len(body["gps_points"]) == len(TRACK)
+    assert body["gps_points"][0] == {
+        "gps_observation_index": 0,
+        "longitude": TRACK[0][0],
+        "latitude": TRACK[0][1],
+    }
     # Per-observation arcs are [0, 0, 1, 2, 2, 3]; consecutive duplicates collapse.
     assert [m["arc_id"] for m in body["matches"]] == [0, 0, 1, 2, 2, 3]
     assert body["predicted_arc_ids"] == [0, 1, 2, 3]

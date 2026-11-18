@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PathSnap Map Matching</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    >
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: #172033;
+        background: #f3f6fa;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      header {
+        padding: 18px 24px;
+        color: #fff;
+        background: #12355b;
+      }
+      header h1 { margin: 0; font-size: 1.35rem; }
+      header p { margin: 5px 0 0; color: #d3e2f1; }
+      main { max-width: 1280px; margin: 20px auto; padding: 0 18px; }
+      .panel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 12px;
+        padding: 16px;
+        background: #fff;
+        border: 1px solid #dce4ed;
+        border-radius: 10px;
+        box-shadow: 0 2px 9px #132f4c10;
+      }
+      label { display: grid; gap: 5px; font-size: .88rem; font-weight: 600; }
+      select, button {
+        min-height: 40px;
+        padding: 8px 12px;
+        border: 1px solid #aebdcd;
+        border-radius: 6px;
+        background: #fff;
+        font: inherit;
+      }
+      #trip-select { min-width: 220px; }
+      button {
+        border-color: #145da0;
+        color: #fff;
+        background: #145da0;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      button:disabled { opacity: .58; cursor: wait; }
+      #status { min-height: 24px; margin: 12px 2px; }
+      #status.error { color: #a31919; }
+      #summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .metric {
+        padding: 10px 12px;
+        background: #fff;
+        border: 1px solid #dce4ed;
+        border-radius: 8px;
+      }
+      .metric span { display: block; color: #58677a; font-size: .78rem; }
+      .metric strong { display: block; margin-top: 3px; font-size: 1rem; }
+      .map-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 12px 2px 8px;
+      }
+      .legend { display: flex; gap: 16px; color: #435268; font-size: .88rem; }
+      .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+      .dot { width: 11px; height: 11px; border-radius: 50%; background: #1673c9; }
+      .line { width: 22px; border-top: 4px solid #d72828; }
+      #map {
+        width: 100%;
+        height: min(68vh, 700px);
+        min-height: 380px;
+        border: 1px solid #bdcad7;
+        border-radius: 10px;
+        background: #e8eef4;
+      }
+      .footnote { margin: 8px 2px; color: #637184; font-size: .8rem; }
+      @media (max-width: 600px) {
+        header { padding: 15px 18px; }
+        #trip-select { min-width: 0; width: 100%; }
+        .panel label { flex: 1 1 100%; }
+        .panel button { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>PathSnap Map Matching</h1>
+      <p>Compare GPS observations with the route reconstructed by the selected decoder.</p>
+    </header>
+    <main>
+      <section class="panel" aria-label="Prediction controls">
+        <label for="trip-select">
+          Trip
+          <select id="trip-select" disabled>
+            <option value="">Loading trips…</option>
+          </select>
+        </label>
+        <label for="decoder-select">
+          Decoder
+          <select id="decoder-select">
+            <option value="hmm" selected>HMM / Viterbi</option>
+            <option value="argmax">Classifier argmax</option>
+          </select>
+        </label>
+        <button id="predict-button" type="button" disabled>Predict Route</button>
+      </section>
+      <p id="status" role="status" aria-live="polite">Loading available trips…</p>
+      <section id="summary" aria-label="Trip and prediction information"></section>
+      <div class="map-heading">
+        <strong>Predicted route map</strong>
+        <div class="legend" aria-label="Map legend">
+          <span class="legend-item"><span class="dot"></span>GPS observations</span>
+          <span class="legend-item"><span class="line"></span>Predicted road arcs</span>
+        </div>
+      </div>
+      <div id="map" aria-label="Map of GPS observations and predicted road route"></div>
+      <p class="footnote">Road tiles © OpenStreetMap contributors. Reference routes are not requested or displayed.</p>
+    </main>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script>
+      (() => {
+        const tripSelect = document.getElementById("trip-select");
+        const decoderSelect = document.getElementById("decoder-select");
+        const predictButton = document.getElementById("predict-button");
+        const status = document.getElementById("status");
+        const summary = document.getElementById("summary");
+        const map = L.map("map").setView([0, 0], 2);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+        const gpsLayer = L.layerGroup().addTo(map);
+        const gpsPathLayer = L.layerGroup().addTo(map);
+        const routeLayer = L.geoJSON(null, {
+          style: { color: "#d72828", weight: 5, opacity: 0.9 }
+        }).addTo(map);
+
+        function setStatus(message, isError = false) {
+          status.textContent = message;
+          status.classList.toggle("error", isError);
+        }
+
+        function metric(label, value) {
+          const item = document.createElement("div");
+          item.className = "metric";
+          const name = document.createElement("span");
+          name.textContent = label;
+          const result = document.createElement("strong");
+          result.textContent = value;
+          item.append(name, result);
+          summary.append(item);
+        }
+
+        async function loadTrips() {
+          try {
+            const response = await fetch("/trips");
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.detail?.message || "Could not load trips.");
+            }
+            tripSelect.replaceChildren();
+            for (const tripId of payload.trips) {
+              const option = document.createElement("option");
+              option.value = tripId;
+              option.textContent = tripId;
+              tripSelect.append(option);
+            }
+            tripSelect.disabled = payload.trips.length === 0;
+            predictButton.disabled = payload.trips.length === 0;
+            setStatus(
+              payload.trips.length
+                ? `${payload.count} trip(s) available. Select a trip and predict its route.`
+                : "No trips were found in the configured data directory.",
+              payload.trips.length === 0
+            );
+          } catch (error) {
+            tripSelect.replaceChildren(new Option("Trip list unavailable", ""));
+            setStatus(error.message || "Could not load trips from the API.", true);
+          }
+        }
+
+        function showPrediction(data) {
+          gpsLayer.clearLayers();
+          gpsPathLayer.clearLayers();
+          routeLayer.clearLayers();
+          summary.replaceChildren();
+
+          const points = data.gps_points || [];
+          for (const point of points) {
+            L.circleMarker([point.latitude, point.longitude], {
+              radius: 4,
+              color: "#07569a",
+              weight: 1,
+              fillColor: "#1687e0",
+              fillOpacity: 0.88
+            }).bindTooltip(`GPS observation ${point.gps_observation_index}`).addTo(gpsLayer);
+          }
+          if (points.length > 1) {
+            L.polyline(
+              points.map((point) => [point.latitude, point.longitude]),
+              { color: "#2788ce", weight: 2, opacity: 0.45, dashArray: "5 7" }
+            ).addTo(gpsPathLayer);
+          }
+          routeLayer.addData(data.geometry);
+
+          const bounds = L.latLngBounds([]);
+          for (const point of points) {
+            bounds.extend([point.latitude, point.longitude]);
+          }
+          if (routeLayer.getBounds().isValid()) {
+            bounds.extend(routeLayer.getBounds());
+          }
+          if (bounds.isValid()) {
+            map.fitBounds(bounds.pad(0.08), { maxZoom: 17 });
+          }
+
+          metric("Trip", data.trip_id);
+          metric("Prediction", data.status);
+          metric("Decoder", data.decoder);
+          metric("GPS observations", String(data.metrics.n_gps_observations));
+          metric("Matched observations", String(data.metrics.n_matched_observations));
+          metric("Candidate arcs", String(data.metrics.n_candidates));
+          metric("Predicted road arcs", String(data.metrics.n_predicted_arcs));
+          metric(
+            "Mean match probability",
+            data.metrics.mean_match_probability == null
+              ? "—"
+              : Number(data.metrics.mean_match_probability).toFixed(3)
+          );
+          setStatus(
+            `${data.status}: ${data.metrics.n_matched_observations} of ` +
+            `${data.metrics.n_gps_observations} observations matched.`
+          );
+        }
+
+        predictButton.addEventListener("click", async () => {
+          const tripId = tripSelect.value;
+          if (!tripId) return;
+          predictButton.disabled = true;
+          predictButton.textContent = "Predicting…";
+          setStatus(`Running ${decoderSelect.value} prediction for ${tripId}…`);
+          summary.replaceChildren();
+          gpsLayer.clearLayers();
+          gpsPathLayer.clearLayers();
+          routeLayer.clearLayers();
+          try {
+            const response = await fetch(`/predict/${encodeURIComponent(tripId)}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ decoder: decoderSelect.value })
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.detail?.message || `Prediction failed (${response.status}).`);
+            }
+            showPrediction(payload);
+          } catch (error) {
+            setStatus(error.message || "Prediction failed.", true);
+          } finally {
+            predictButton.disabled = false;
+            predictButton.textContent = "Predict Route";
+          }
+        });
+
+        loadTrips();
+      })();
+    </script>
+  </body>
+</html>

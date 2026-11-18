@@ -36,6 +36,7 @@ from api.schemas import (
     ArcFeature,
     ArcProperties,
     GeometryCollection,
+    GpsPoint,
     LineStringGeometry,
     ObservationMatch,
     PredictMetrics,
@@ -168,6 +169,31 @@ def build_geometry(
     return GeometryCollection(features=features)
 
 
+def _valid_gps_points(track: pd.DataFrame) -> list[GpsPoint]:
+    longitude = pd.to_numeric(track["longitude"], errors="coerce").to_numpy(
+        dtype=np.float64
+    )
+    latitude = pd.to_numeric(track["latitude"], errors="coerce").to_numpy(
+        dtype=np.float64
+    )
+    valid = (
+        np.isfinite(longitude)
+        & np.isfinite(latitude)
+        & (longitude >= -180.0)
+        & (longitude <= 180.0)
+        & (latitude >= -90.0)
+        & (latitude <= 90.0)
+    )
+    return [
+        GpsPoint(
+            gps_observation_index=int(index),
+            longitude=float(longitude[index]),
+            latitude=float(latitude[index]),
+        )
+        for index in np.flatnonzero(valid)
+    ]
+
+
 # ------------------------------------------------------------------ pipeline
 def _validated_decode_result(
     result: DecodeResult, n_observations: int, n_arcs: int
@@ -235,7 +261,8 @@ def predict_trip(
         probabilities = classifier.predict_proba(features.loc[:, list(FEATURE_COLUMNS)])
         t_classified = perf_counter()
 
-        frame = features.merge(
+        feature_rows = features.assign(_candidate_probability=probabilities)
+        frame = feature_rows.merge(
             candidates[
                 ["gps_observation_index", "candidate_arc_id", "candidate_rank", "distance_m"]
             ],
@@ -243,11 +270,14 @@ def predict_trip(
             how="left",
             validate="one_to_one",
         )
+        aligned_probabilities = frame.pop("_candidate_probability").to_numpy(
+            dtype=np.float64
+        )
         try:
             decode_result = decoder.decode(
                 DecodeInput(
                     candidates=frame,
-                    probabilities=probabilities,
+                    probabilities=aligned_probabilities,
                     n_observations=n_observations,
                     track=track,
                     nodes=nodes,
@@ -301,6 +331,7 @@ def predict_trip(
         status=status,
         model=classifier.name,
         decoder=options.decoder,
+        gps_points=_valid_gps_points(track),
         predicted_arc_ids=[int(arc_id) for arc_id in sequence],
         geometry=geometry,
         matches=matches,

@@ -334,8 +334,8 @@ def decode_route(
     ``candidate_probabilities``, when supplied, must align row-for-row with
     ``candidates``. Otherwise ``probability_column`` is read from that table.
     Empty-candidate observations, invalid time/coordinate intervals, large time
-    gaps, and transitions without a plausible directed network path split the
-    Viterbi sequence; predictions are still returned for each available run.
+    gaps, invalid candidate arcs, and transitions unreachable from the active
+    Viterbi states split or exclude states from decoding.
     """
     if not np.isfinite(max_gap_seconds) or max_gap_seconds <= 0:
         raise ValueError("max_gap_seconds must be finite and positive")
@@ -406,12 +406,22 @@ def decode_route(
         valid_gps,
     )
 
+    observations_with_candidates = np.bincount(
+        observation_indices, minlength=len(track)
+    ) > 0
     states_by_observation: list[list[tuple[int, float, float]]] = [
         [] for _ in range(len(track))
     ]
-    for observation_index, arc_id, probability, fraction in zip(
-        observation_indices, candidate_arc_ids, probabilities, fractions, strict=True
+    for observation_index, arc_id, probability, fraction, valid_arc in zip(
+        observation_indices,
+        candidate_arc_ids,
+        probabilities,
+        fractions,
+        arc_valid[candidate_arc_ids] & np.isfinite(lengths[candidate_arc_ids]),
+        strict=True,
     ):
+        if not valid_arc:
+            continue
         states_by_observation[int(observation_index)].append(
             (int(arc_id), float(probability), float(fraction))
         )
@@ -431,6 +441,7 @@ def decode_route(
     segment_ids = np.full(len(track), -1, dtype=np.int64)
     continuity_groups = np.full(len(track), -1, dtype=np.int64)
     statuses = np.full(len(track), "no_candidates", dtype=object)
+    statuses[observations_with_candidates] = "no_valid_candidates"
     segment_counter = 0
     continuity_group_counter = 0
     current_continuity_group = -1
@@ -439,6 +450,9 @@ def decode_route(
         nonlocal segment_counter
         chunk_start = 0
         transition_matrices: list[np.ndarray] = []
+        reachable_states = np.ones(
+            len(states_by_observation[observation_run[0]]), dtype=bool
+        )
 
         def store_chunk(chunk_end: int) -> None:
             nonlocal segment_counter
@@ -479,12 +493,19 @@ def decode_route(
                 transition_sigma_m,
                 relative_sigma,
             )
-            if not np.isfinite(matrix).any():
+            reachable_next_states = np.any(
+                np.isfinite(matrix) & reachable_states[:, np.newaxis], axis=0
+            )
+            if not reachable_next_states.any():
                 store_chunk(position)
                 chunk_start = position
                 transition_matrices = []
+                reachable_states = np.ones(
+                    len(states_by_observation[next_index]), dtype=bool
+                )
             else:
                 transition_matrices.append(matrix)
+                reachable_states = reachable_next_states
         store_chunk(len(observation_run))
 
     current_run: list[int] = []

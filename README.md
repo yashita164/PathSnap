@@ -751,19 +751,6 @@ Potential future improvements include:
 - Evaluating the system on larger and more diverse GPS datasets.
 - Performing broader end-to-end testing across different deployment environments.
 
-## 18. Contributors
-
-PathSnap was developed as a collaborative machine learning project.
-
-| Contributor | Responsibility |
-|---|---|
-| Person 1 | Machine learning model comparison, hyperparameter optimization, and final model evaluation. |
-| Person 2 | HMM/Viterbi sequence decoding, testing, and related integration. |
-| Team | Backend, frontend, application integration, testing, and project documentation. |
-
-*Update contributor names and responsibilities to match the final team allocation.*
-
----
 
 ## Conclusion
 
